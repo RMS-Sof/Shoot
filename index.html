@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooting Ball Game</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: #222;
+            display: block;
+            margin: 20px auto;
+            border: 4px solid white;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shooting Ball Game</h1>
+    <p>Score: <span id="score">0</span></p>
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <br>
+    <button onclick="shoot()">Shoot</button>
+    <button onclick="exitGame()">Exit</button>
+    
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let cannonX = canvas.width / 2;
+        const cannonWidth = 50, cannonHeight = 20;
+        let bullets = [];
+        let balls = [];
+        let score = 0;
+        const colors = {"red": 10, "blue": 20, "green": 30, "yellow": 40, "purple": 50, "orange": 60};
+        let direction = 1;
+
+        function drawCannon() {
+            ctx.fillStyle = "white";
+            ctx.fillRect(cannonX - cannonWidth / 2, canvas.height - cannonHeight - 10, cannonWidth, cannonHeight);
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = "white";
+            bullets.forEach((bullet, index) => {
+                ctx.fillRect(bullet.x - 5, bullet.y, 10, 20);
+                bullet.y -= 5;
+                if (bullet.y < 0) bullets.splice(index, 1);
+            });
+        }
+
+        function drawBalls() {
+            balls.forEach((ball, index) => {
+                ctx.fillStyle = ball.color;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ball.y += 2;
+                if (ball.y > canvas.height) balls.splice(index, 1);
+            });
+        }
+
+        function detectCollisions() {
+            bullets.forEach((bullet, bIndex) => {
+                balls.forEach((ball, ballIndex) => {
+                    const dist = Math.sqrt((bullet.x - ball.x) ** 2 + (bullet.y - ball.y) ** 2);
+                    if (dist < ball.radius + 5) {
+                        score += colors[ball.color];
+                        document.getElementById("score").innerText = score;
+                        bullets.splice(bIndex, 1);
+                        balls.splice(ballIndex, 1);
+                    }
+                });
+            });
+        }
+
+        function moveCannon() {
+            cannonX += direction * 2;
+            if (cannonX < cannonWidth / 2 || cannonX > canvas.width - cannonWidth / 2) {
+                direction *= -1;
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            moveCannon();
+            drawCannon();
+            drawBullets();
+            drawBalls();
+            detectCollisions();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function spawnBall() {
+            balls.push({
+                x: Math.random() * canvas.width,
+                y: 0,
+                radius: 15 + Math.random() * 10,
+                color: Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)]
+            });
+        }
+
+        function shoot() {
+            bullets.push({ x: cannonX, y: canvas.height - cannonHeight - 20 });
+        }
+
+        function exitGame() {
+            alert("Thanks for playing!");
+            window.close();
+        }
+
+        setInterval(spawnBall, 1000);
+        gameLoop();
+    </script>
+</body>
+</html>
